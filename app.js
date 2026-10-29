@@ -136,6 +136,9 @@ const guide = {
   autoSustain: false
 };
 
+let songMenuOpen = false;
+let songMenuIndex = 0;
+
 const isBlack = (semitone) => BLACK_NOTES.has(((semitone % 12) + 12) % 12);
 const noteName = (midi) => NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
 
@@ -166,7 +169,10 @@ const dom = {
   guideAgain: document.getElementById('guideAgain'),
   guideLoop: document.getElementById('guideLoop'),
   guideHint: document.getElementById('guideHint'),
-  songSelect: document.getElementById('songSelect')
+  songPicker: document.getElementById('songPicker'),
+  songSelect: document.getElementById('songSelect'),
+  songLabel: document.getElementById('songLabel'),
+  songMenu: document.getElementById('songMenu')
 };
 
 /* --------------------------- State --------------------------- */
@@ -723,6 +729,8 @@ function stopGuide() {
   guide.active = false;
   guide.complete = false;
 
+  closeSongMenu();
+
   if (guide.timer) clearTimeout(guide.timer);
   guide.timer = null;
 
@@ -792,21 +800,78 @@ function selectSong(id) {
   guide.loopTimer = null;
 
   dom.guideNext.classList.remove('wrong');
-  dom.songSelect.blur();
+  closeSongMenu();
   renderGuide();
 }
 
 function buildSongPicker() {
-  dom.songSelect.textContent = '';
+  dom.songMenu.textContent = '';
 
   for (const song of SONGS) {
-    const option = document.createElement('option');
-    option.value = song.id;
+    const option = document.createElement('li');
+    option.className = 'guide-song-option';
+    option.id = `song-option-${song.id}`;
+    option.dataset.id = song.id;
+    option.setAttribute('role', 'option');
     option.textContent = song.title;
-    dom.songSelect.append(option);
+    dom.songMenu.append(option);
   }
 
-  dom.songSelect.value = currentSong.id;
+  syncSongPicker();
+}
+
+function syncSongPicker() {
+  dom.songLabel.textContent = currentSong.title;
+  dom.songSelect.setAttribute('aria-label', `Choose a song. Current song: ${currentSong.title}`);
+
+  for (const option of dom.songMenu.children) {
+    option.setAttribute('aria-selected', String(option.dataset.id === currentSong.id));
+  }
+}
+
+function openSongMenu() {
+  if (songMenuOpen) return;
+
+  songMenuOpen = true;
+  songMenuIndex = Math.max(0, SONGS.findIndex((song) => song.id === currentSong.id));
+  dom.songMenu.hidden = false;
+  dom.songSelect.setAttribute('aria-expanded', 'true');
+  highlightSongOption(songMenuIndex);
+}
+
+function closeSongMenu() {
+  if (!songMenuOpen) return;
+
+  songMenuOpen = false;
+  dom.songMenu.hidden = true;
+  dom.songSelect.setAttribute('aria-expanded', 'false');
+  dom.songSelect.removeAttribute('aria-activedescendant');
+
+  for (const option of dom.songMenu.children) {
+    option.classList.remove('is-active');
+  }
+}
+
+function highlightSongOption(index) {
+  const options = dom.songMenu.children;
+  if (!options.length) return;
+
+  songMenuIndex = (index + options.length) % options.length;
+
+  Array.from(options).forEach((option, i) => {
+    option.classList.toggle('is-active', i === songMenuIndex);
+  });
+
+  dom.songSelect.setAttribute('aria-activedescendant', options[songMenuIndex].id);
+}
+
+function chooseSongOption(index) {
+  const song = SONGS[index];
+  if (!song) return;
+
+  closeSongMenu();
+  selectSong(song.id);
+  dom.songSelect.focus();
 }
 
 function scheduleGuideLoop() {
@@ -837,7 +902,7 @@ function renderGuide() {
   const rhythmBeats = previousIndex >= 0 ? (currentSong.beats[previousIndex] || 1) : 2;
   const timingMs = Math.max(220, Math.round(rhythmBeats * (currentSong.beatMs || 600)));
 
-  dom.songSelect.value = currentSong.id;
+  syncSongPicker();
   dom.guideProgress.textContent = `${guide.index} / ${total}`;
   dom.guideStrip.textContent = '';
 
@@ -1072,7 +1137,74 @@ dom.learnBtn.addEventListener('click', startGuide);
 dom.guideClose.addEventListener('click', stopGuide);
 dom.guideAgain.addEventListener('click', restartGuide);
 dom.guideLoop.addEventListener('click', toggleGuideLoop);
-dom.songSelect.addEventListener('change', () => selectSong(dom.songSelect.value));
+
+dom.songSelect.addEventListener('click', () => {
+  if (songMenuOpen) closeSongMenu();
+  else openSongMenu();
+});
+
+dom.songSelect.addEventListener('keydown', (event) => {
+  if (!songMenuOpen) {
+    if (
+      event.key === 'Enter' ||
+      event.key === ' ' ||
+      event.key === 'Spacebar' ||
+      event.key === 'ArrowDown' ||
+      event.key === 'ArrowUp'
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      openSongMenu();
+
+      if (event.key === 'ArrowUp') {
+        highlightSongOption(songMenuIndex - 1);
+      }
+    }
+    return;
+  }
+
+  event.stopPropagation();
+
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    highlightSongOption(songMenuIndex + (event.key === 'ArrowDown' ? 1 : -1));
+  } else if (event.key === 'Home' || event.key === 'End') {
+    event.preventDefault();
+    highlightSongOption(event.key === 'Home' ? 0 : SONGS.length - 1);
+  } else if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+    event.preventDefault();
+    chooseSongOption(songMenuIndex);
+  } else if (event.key === 'Escape') {
+    event.preventDefault();
+    closeSongMenu();
+  } else if (event.key === 'Tab') {
+    closeSongMenu();
+  }
+});
+
+dom.songMenu.addEventListener('click', (event) => {
+  const option = event.target.closest('.guide-song-option');
+  if (!option) return;
+
+  chooseSongOption(Array.prototype.indexOf.call(dom.songMenu.children, option));
+});
+
+dom.songMenu.addEventListener('pointerover', (event) => {
+  const option = event.target.closest('.guide-song-option');
+  if (!option) return;
+
+  highlightSongOption(Array.prototype.indexOf.call(dom.songMenu.children, option));
+});
+
+// Keep Space from reaching the global sustain pedal when it is used to
+// open or confirm the song menu.
+dom.songSelect.addEventListener('keyup', (event) => {
+  if (event.code === 'Space') event.stopPropagation();
+});
+
+document.addEventListener('pointerdown', (event) => {
+  if (songMenuOpen && !dom.songPicker.contains(event.target)) closeSongMenu();
+});
 
 dom.recordBtn.addEventListener('click', () => {
   if (rec.active) stopRecording();

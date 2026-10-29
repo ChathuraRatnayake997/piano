@@ -522,16 +522,19 @@ kbd {
 }
 
 .guide-song {
-  appearance: none;
+  position: relative;
   min-width: 0;
-  max-width: 180px;
-  padding: 1px 16px 1px 0;
-  border: 0;
-  background-color: transparent;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23e3a44f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 1px center;
-  background-size: 9px;
+}
+
+.guide-song-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 190px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(227, 164, 79, 0.28);
+  background: rgba(227, 164, 79, 0.09);
   color: #e9c491;
   font: inherit;
   font-size: 10.5px;
@@ -539,22 +542,85 @@ kbd {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
-  text-overflow: ellipsis;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.guide-song option {
-  background: #1b1714;
-  color: #f3ece2;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
+.guide-song-btn:hover {
+  background: rgba(227, 164, 79, 0.16);
+  border-color: rgba(227, 164, 79, 0.45);
 }
 
-.guide-song:focus-visible {
+.guide-song-btn:focus-visible {
   outline: 2px solid rgba(227, 164, 79, 0.7);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline-offset: 2px;
+}
+
+.guide-song-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.guide-song-chevron {
+  width: 9px;
+  height: 6px;
+  flex: none;
+  color: #e3a44f;
+  transition: transform 0.15s ease;
+}
+
+.guide-song-btn[aria-expanded="true"] .guide-song-chevron {
+  transform: rotate(180deg);
+}
+
+.guide-song-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  max-width: 240px;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  border-radius: 10px;
+  border: 1px solid rgba(227, 164, 79, 0.24);
+  background: linear-gradient(180deg, #211b16, #171310);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.guide-song-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: #d9cbb9;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.guide-song-option.is-active {
+  background: rgba(227, 164, 79, 0.14);
+  color: #ffe2b6;
+}
+
+.guide-song-option[aria-selected="true"] {
+  color: #ffe2b6;
+}
+
+.guide-song-option[aria-selected="true"]::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(227, 164, 79, 0.85);
 }
 
 .guide-progress {
@@ -801,7 +867,7 @@ kbd {
   margin-left: auto;
 }
 
-.guide.complete .guide-song,
+.guide.complete .guide-song-btn,
 .guide.complete .guide-next {
   color: #f6d7a4;
 }
