@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0c0b0a" />
+  <meta name="description" content="A minimal two-octave piano you can play with your computer keyboard or by tapping the keys." />
+  <title>Mini Piano — Play with your keyboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23171412'/%3E%3Crect x='7' y='9' width='5' height='14' rx='1.5' fill='%23eee6d8'/%3E%3Crect x='13.5' y='9' width='5' height='14' rx='1.5' fill='%23eee6d8'/%3E%3Crect x='20' y='9' width='5' height='14' rx='1.5' fill='%23eee6d8'/%3E%3Crect x='10.2' y='9' width='3.2' height='9' rx='1' fill='%23221c18'/%3E%3Crect x='16.7' y='9' width='3.2' height='9' rx='1' fill='%23221c18'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css?v=19" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="controls" role="group" aria-label="Piano controls">
+        <div class="octave">
+          <span class="octave-label">Octave</span>
+          <button class="ctrl-btn octave-btn" id="octDown" type="button" aria-label="Shift octave down">&minus;</button>
+          <span class="octave-value" id="octaveValue" aria-live="polite">C4</span>
+          <button class="ctrl-btn octave-btn" id="octUp" type="button" aria-label="Shift octave up">+</button>
+        </div>
+
+        <button class="ctrl-btn sustain" id="sustainBtn" type="button" aria-pressed="false">Sustain</button>
+
+        <label class="volume">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9v6h4l5 4V5L8 9H4z" />
+            <path d="M17 8.5a5 5 0 0 1 0 7" />
+          </svg>
+          <input id="volume" type="range" min="0" max="100" value="65" aria-label="Volume" />
+        </label>
+      </div>
+    </header>
+
+    <div class="keyboard-block">
+      <h1 class="piano-title">Mini Piano</h1>
+      <section class="piano-body" aria-label="Piano keyboard">
+        <div class="piano" id="piano">
+          <div class="white-keys" id="whiteKeys"></div>
+          <div class="black-keys" id="blackKeys"></div>
+        </div>
+      </section>
+
+      <div class="legend">
+        <div class="legend-group legend-keys">
+          <span class="legend-label">White</span>
+          <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd>
+          <span class="legend-sep">&middot;</span>
+          <kbd>K</kbd><kbd>L</kbd><kbd>C</kbd><kbd>V</kbd><kbd>B</kbd><kbd>N</kbd><kbd>M</kbd>
+        </div>
+        <div class="legend-group legend-keys">
+          <span class="legend-label">Black</span>
+          <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd>
+          <span class="legend-sep">&middot;</span>
+          <kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd>
+        </div>
+        <div class="legend-group">
+          <span class="legend-label">Octave</span>
+          <kbd>&larr;</kbd><kbd>&rarr;</kbd>
+        </div>
+        <div class="legend-group">
+          <span class="legend-label">Sustain</span>
+          <kbd>Space</kbd>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="recorder">
+        <button class="ctrl-btn rec-btn" id="recordBtn" type="button" aria-pressed="false">
+          <span class="rec-dot" aria-hidden="true"></span>
+          <span id="recordLabel">Record</span>
+        </button>
+        <span class="rec-timer" id="recTimer" hidden>0:00</span>
+        <span class="rec-hint" id="recHint">Capture your playing as a WAV file</span>
+        <div class="take" id="take" hidden>
+          <span class="take-info" id="takeInfo"></span>
+          <a class="ctrl-btn take-download" id="downloadBtn" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 4v11" />
+              <path d="m7 11 5 5 5-5" />
+              <path d="M5 20h14" />
+            </svg>
+            Download WAV
+          </a>
+        </div>
+        <button class="ctrl-btn learn-btn" id="learnBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          Learn a song
+        </button>
+      </div>
+
+      <div class="guide" id="guide" hidden>
+          <div class="guide-head">
+            <select class="guide-song" id="songSelect" aria-label="Choose a song"></select>
+            <span class="guide-progress" id="guideProgress">0 / 25</span>
+            <button class="guide-loop" id="guideLoop" type="button" aria-pressed="false">Loop</button>
+            <button class="guide-close" id="guideClose" type="button" aria-label="Close guide">&times;</button>
+          </div>
+          <div class="guide-strip" id="guideStrip"></div>
+          <div class="guide-foot">
+            <span class="guide-next" id="guideNext" role="status"></span>
+            <span class="guide-hint" id="guideHint">press when the bar fills</span>
+            <button class="ctrl-btn guide-again" id="guideAgain" type="button" hidden>Play again</button>
+          </div>
+        </div>
+      <p class="touch-hint">Tap the keys to play</p>
+    </footer>
+  </main>
+
+  <script src="app.js?v=19"></script>
+</body>
+</html>
